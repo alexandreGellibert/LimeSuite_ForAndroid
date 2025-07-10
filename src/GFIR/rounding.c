@@ -17,9 +17,7 @@ int csd2int(int cprec, int *code);
 
 /* ************************************************************************ 
    ************************************************************************ */
-void round2int(a, b, n, cprec)
-double *a, *b;
-int n, cprec;
+void round2int(double *a, double *b, int n, int cprec)
 {
 	int i,k;
 
@@ -32,10 +30,8 @@ int n, cprec;
 
 /* ************************************************************************ 
    ************************************************************************ */
-void round2csd(a, b, n, cprec, csdprec, bincode, csdcode, csdcoder)
-double *a, *b;
-int n, cprec, csdprec;
-int **bincode, **csdcode, **csdcoder;
+void round2csd(double *a, double *b, int n, int cprec, int csdprec,
+               int **bincode, int **csdcode, int **csdcoder)
 {
 	int i,k, ia;
 
@@ -118,8 +114,7 @@ void printcode(int ** code, int n, int cprec)
 /* ************************************************************************ 
    Print CSD code in the form of two common sub-expressions sharing 
    ************************************************************************ */
-void print_cses_code(xpx, xmx, x, n, cprec)
-int **xpx, **xmx, **x, n, cprec;
+void print_cses_code(int **xpx, int **xmx, int **x, int n, int cprec)
 {
 	int i, j;
 	int symmetry;
@@ -193,14 +188,14 @@ int **xpx, **xmx, **x, n, cprec;
 }
 
 /* ************************************************************************ 
+ * int a		Input integer to be converted into CSD code
+ * int cprec	Integer precision
+ * int csdprec	CSD precistion
+ * int *bincode	Binary code
+ * int *csdcode	CSD code
+ * int *csdcoder	CSD code rounded to 'csdprec' nonzero bits
    ************************************************************************ */
-void int2csd(a, cprec, csdprec, bincode, csdcode, csdcoder)
-int a;		/* Input integer to be converted into CSD code */
-int cprec;	/* Integer precision */
-int csdprec;	/* CSD precistion */
-int *bincode;	/* Binary code */
-int *csdcode;	/* CSD code */
-int *csdcoder;	/* CSD code rounded to 'csdprec' nonzero bits */
+void int2csd(int a, int cprec, int csdprec, int *bincode, int *csdcode, int *csdcoder)
 {
 	int i, sign, ci, ci1, nzeroes;
 
@@ -243,8 +238,7 @@ int *csdcoder;	/* CSD code rounded to 'csdprec' nonzero bits */
 
 /* ************************************************************************ 
    ************************************************************************ */
-int csd2int(cprec, code)
-int cprec, *code;
+int csd2int(int cprec, int *code)
 {
 	int i, a;
 	
@@ -257,9 +251,7 @@ int cprec, *code;
 /* ************************************************************************ 
 	Extract x+x>>2 and x-x>>2 subexpressions from the CSD code
    ************************************************************************ */
-void csesh(code, n, cprec, xpx, xmx, x )
-int n, cprec;
-int **code, **xpx, **xmx, **x;
+void csesh(int **code, int n, int cprec, int **xpx, int **xmx, int **x)
 {
 	int i, k;
 
