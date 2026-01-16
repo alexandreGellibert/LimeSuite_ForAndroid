@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <iostream>
 #include <stdint.h>
+#include <cstdint>
 
 using namespace std;
 
