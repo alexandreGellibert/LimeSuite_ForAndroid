@@ -55,6 +55,5 @@ target_link_libraries(SoapyLMS7 PRIVATE
 set_target_properties(SoapyLMS7 PROPERTIES
 		PREFIX "lib"
 		SUFFIX ".so"
-		LIBRARY_OUTPUT_DIRECTORY ${ANDROID_JNI_LIBS_DIR}
 )
 
