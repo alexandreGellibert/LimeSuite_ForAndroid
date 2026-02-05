@@ -3,6 +3,9 @@
 @author Lime Microsystems
 @brief API for reporting error codes and error messages.
 */
+#ifdef __ANDROID__
+#include <android/log.h>
+#endif
 
 #include "Logger.h"
 #include <cstdio>
@@ -60,11 +63,34 @@ int lime::ReportError(const int errnum, const char *format, va_list argList)
 
 static void defaultLogHandler(const lime::LogLevel level, const char *message)
 {
+#ifdef __ANDROID__
+    int prio = ANDROID_LOG_DEBUG;
+
+    switch (level)
+    {
+        case lime::LOG_LEVEL_ERROR:
+            prio = ANDROID_LOG_ERROR;
+            break;
+        case lime::LOG_LEVEL_WARNING:
+            prio = ANDROID_LOG_WARN;
+            break;
+        case lime::LOG_LEVEL_INFO:
+            prio = ANDROID_LOG_INFO;
+            break;
+        case lime::LOG_LEVEL_DEBUG:
+        default:
+            prio = ANDROID_LOG_DEBUG;
+            break;
+    }
+
+    __android_log_print(prio, "LimeSuite", "%s", message);
+#else
 #ifdef NDEBUG
     if (level == lime::LOG_LEVEL_DEBUG)
         return;
 #endif
     fprintf(stderr, "%s\n", message);
+#endif
 }
 
 static lime::LogHandler logHandler(&defaultLogHandler);

@@ -123,8 +123,8 @@ include(CMakeDependentOption)
 option(ENABLE_LIBRARY "Enable build library" ON)
 add_feature_info(LimeSuiteLibrary ENABLE_LIBRARY "The lime suite library")
 if (ENABLE_LIBRARY)
-    add_library(LimeSuite ${LIME_SUITE_SOURCES})
-    target_link_libraries(LimeSuite ${LIME_SUITE_LIBRARIES})
+    add_library(LimeSuite SHARED ${LIME_SUITE_SOURCES})
+    target_link_libraries(LimeSuite ${LIME_SUITE_LIBRARIES} android log)
     set_property(TARGET LimeSuite PROPERTY POSITION_INDEPENDENT_CODE TRUE)
     set_target_properties(LimeSuite PROPERTIES SOVERSION ${LIME_SUITE_SOVER})
     set_target_properties(LimeSuite PROPERTIES VERSION ${LIME_SUITE_LIBVER})
@@ -297,17 +297,25 @@ install(
 )
 endif (ENABLE_HEADERS AND ENABLE_LIBRARY)
 
+if(ANDROID)
+    target_link_libraries(LimeSuite
+            log
+            android
+            atomic
+    )
+endif()
+
 #########################################################################
 # utilities
 #########################################################################
-add_subdirectory(utilities)
+#add_subdirectory(utilities)
 
 #########################################################################
 # examples
 #########################################################################
-add_subdirectory(examples)
+#add_subdirectory(examples)
 
 #########################################################################
 # LimeRFE
 #########################################################################
-add_subdirectory(limeRFE)
+#add_subdirectory(limeRFE)

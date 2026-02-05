@@ -60,6 +60,9 @@ IConnection *ConnectionRegistry::makeConnection(const ConnectionHandle &handle)
     //only identifiers from the discovery function itself is used in the factory
     for (const auto &entry : registryEntries)
     {
+#if defined(__ANDROID__)
+        return entry.second->make(handle);
+#elif
         //filter by module name when specified
         if (not handle.module.empty() and handle.module != entry.first) continue;
 
@@ -70,7 +73,7 @@ IConnection *ConnectionRegistry::makeConnection(const ConnectionHandle &handle)
         realHandle.module = entry.first;
 
         return entry.second->make(realHandle);
-
+#endif
     }
 
     return nullptr;

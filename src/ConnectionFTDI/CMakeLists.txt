@@ -28,6 +28,17 @@ if(WIN32)
         set(USB_LIBRARIES ${FTD3XX_LIB_DIR}/FTD3XX.lib SetupAPI)
         install(FILES ${FTD3XX_LIB_DIR}/FTD3XX.dll DESTINATION bin)
     endif()
+elseif(ANDROID)
+    # Android: libusb is built as a subproject
+    set(USB_FOUND TRUE)
+
+    set(USB_INCLUDE_DIRS
+            ${CMAKE_SOURCE_DIR}/libusb/libusb
+            ${CMAKE_SOURCE_DIR}/libusb/android
+    )
+
+    # Name of the target created by libusb's CMakeLists.txt
+    set(USB_LIBRARIES libusb)
 
 elseif(UNIX)
     find_package(libusb-1.0)

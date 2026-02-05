@@ -7,6 +7,17 @@ if(WIN32)
     set(USB_FOUND ${CYAPI_FOUND})
     set(USB_INCLUDE_DIRS ${CYAPI_INCLUDE_DIRS})
     set(USB_LIBRARIES ${CYAPI_LIBRARIES} SetupAPI)
+elseif(ANDROID)
+    # Android: libusb is built as a subproject
+    set(USB_FOUND TRUE)
+
+    set(USB_INCLUDE_DIRS
+            ${CMAKE_SOURCE_DIR}/libusb/libusb
+            ${CMAKE_SOURCE_DIR}/libusb/android
+    )
+
+    # Name of the target created by libusb's CMakeLists.txt
+    set(USB_LIBRARIES libusb)
 elseif(UNIX)
     find_package(libusb-1.0)
     set(USB_FOUND ${LIBUSB_1_FOUND})

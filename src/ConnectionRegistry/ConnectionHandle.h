@@ -56,6 +56,21 @@ public:
      */
     std::string serial;
 
+#if defined(__ANDROID__)
+// To handle connections in Android we need the File Descriptor (fd) and the device Path
+
+    /*!
+     * File Descriptor given by Android Usb Manager (actually a number)
+     */
+     int32_t androidFd;
+
+    /*!
+     * Path given by Android Usb Manager.
+     */
+    std::string androidUSBPath;
+
+#endif
+
     /*!
      * An internal index which may enumerate device handles.
      */

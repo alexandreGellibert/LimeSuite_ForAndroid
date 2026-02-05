@@ -43,6 +43,7 @@ ConnectionFT601::ConnectionFT601(void *arg, const ConnectionHandle &handle)
     int pid = -1;
     int vid = -1;
     mSerial = std::strtoll(handle.serial.c_str(),nullptr,16);
+    std::string serial = handle.serial;
 #ifndef __unix__
     mFTHandle = NULL;
 #else
@@ -53,8 +54,13 @@ ConnectionFT601::ConnectionFT601(void *arg, const ConnectionHandle &handle)
     dev_handle = 0;
     mUsbCounter = 0;
     ctx = (libusb_context *)arg;
+
+#if defined(__ANDROID__)
+    vid = handle.androidFd;
+    serial = handle.androidUSBPath;
 #endif
-    if (this->Open(handle.serial, vid, pid) != 0)
+#endif
+    if (this->Open(serial, vid, pid) != 0)
         lime::error("Failed to open device");
 }
 
@@ -130,6 +136,7 @@ int ConnectionFT601::FT_SetStreamPipe(unsigned char ep, size_t size)
 */
 int ConnectionFT601::Open(const std::string &serial, int vid, int pid)
 {
+
 #ifndef __unix__
     DWORD devCount;
     FT_STATUS ftStatus = FT_OK;
@@ -157,7 +164,27 @@ int ConnectionFT601::Open(const std::string &serial, int vid, int pid)
     return 0;
 #else
 
+#if defined(__ANDROID__)
+    std::string devicePath = serial;
+    int fd = vid;
+
+    if (fd < 0 || devicePath.empty())
+        return ReportError(EINVAL, "Missing Android USB parameters");
+
+    libusb_device *device =
+            libusb_get_device2(ctx, devicePath.c_str());
+
+    if (!device)
+        return ReportError(ENODEV, "libusb_get_device2 failed");
+
+    int result = libusb_open2(device, &dev_handle, fd);
+    if (result != 0 || !dev_handle)
+        return ReportError(ENODEV, "libusb_open2 failed");
+
+    isConnected = true;
+#else
     libusb_device **devs; //pointer to pointer of device, used to retrieve a list of devices
+
     int usbDeviceCount = libusb_get_device_list(ctx, &devs);
 
     if (usbDeviceCount < 0)
@@ -194,7 +221,7 @@ int ConnectionFT601::Open(const std::string &serial, int vid, int pid)
 
     if(dev_handle == nullptr)
         return ReportError(ENODEV, "libusb_open failed");
-
+#endif
     if(libusb_kernel_driver_active(dev_handle, 1) == 1)   //find out if kernel driver is attached
     {
         lime::debug("Kernel Driver Active");

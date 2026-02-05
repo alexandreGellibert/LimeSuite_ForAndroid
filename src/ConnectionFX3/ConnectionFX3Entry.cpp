@@ -78,6 +78,9 @@ ConnectionFX3Entry::~ConnectionFX3Entry(void)
 std::vector<ConnectionHandle> ConnectionFX3Entry::enumerate(const ConnectionHandle &hint)
 {
     std::vector<ConnectionHandle> handles;
+#if defined(__ANDROID__)
+    return handles;
+#endif
 
 #ifndef __unix__
 	CCyUSBDevice device;

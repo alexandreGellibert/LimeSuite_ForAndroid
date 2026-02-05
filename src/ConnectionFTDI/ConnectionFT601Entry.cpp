@@ -64,6 +64,9 @@ std::vector<ConnectionHandle> ConnectionFT601Entry::enumerate(const ConnectionHa
 {
     std::vector<ConnectionHandle> handles;
 
+#if defined(__ANDROID__)
+    return handles;
+#endif
 #ifndef __unix__
     FT_STATUS ftStatus=FT_OK;
     static DWORD numDevs = 0;

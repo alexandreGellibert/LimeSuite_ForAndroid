@@ -34,6 +34,10 @@ static ConnectionHandle argsToHandle(const SoapySDR::Kwargs &args)
     if (args.count("addr") != 0) handle.addr = args.at("addr");
     if (args.count("serial") != 0) handle.serial = args.at("serial");
     if (args.count("index") != 0) handle.index = std::stoi(args.at("index"));
+#if defined(__ANDROID__)
+    if (args.count("fd") != 0) handle.androidFd = std::stoi(args.at("fd"));;
+    if (args.count("usbfs") != 0) handle.androidUSBPath = args.at("usbfs");
+#endif
 
     return handle;
 }

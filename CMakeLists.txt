@@ -5,6 +5,7 @@ cmake_minimum_required(VERSION 3.10)
 set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo" CACHE STRING INTERNAL FORCE)
 project("LimeSuite")
 
+set(CMAKE_BUILD_TYPE Debug)
 option(BUILD_SHARED_LIBS "Build the shared library" ON)
 option(ENABLE_NEW_GAIN_BEHAVIOUR "Enable new gain functionality" OFF)
 
@@ -19,7 +20,6 @@ list(FIND CMAKE_CONFIGURATION_TYPES "${CMAKE_BUILD_TYPE}" index)
 if (${index} EQUAL -1)
    set(CMAKE_BUILD_TYPE "Release")
 endif()
-
 ########################################################################
 # Gather version information from the changelog
 # LIME_SUITE_API_VERSION in VersionInfo.h reflects the major/minor
@@ -210,9 +210,9 @@ endif()
 ## lime suite build
 ########################################################################
 add_subdirectory(src)
-add_subdirectory(mcu_program)
-add_subdirectory(LimeUtil)
-add_subdirectory(QuickTest)
+#add_subdirectory(mcu_program)
+#add_subdirectory(LimeUtil)
+#add_subdirectory(QuickTest)
 
 ########################################################################
 ## SoapySDR bindings for LMS7 RFIC driver
@@ -231,28 +231,28 @@ endif()
 ########################################################################
 ## Doxygen
 ########################################################################
-find_package(Doxygen QUIET)
-include(FeatureSummary)
-include(CMakeDependentOption)
-cmake_dependent_option(ENABLE_API_DOXYGEN "Enable LMS API Doxygen documentation" OFF "DOXYGEN_FOUND" OFF)
-add_feature_info(LimeSuiteDocAPI ENABLE_API_DOXYGEN "LMS API Doxygen documentation")
-if (ENABLE_API_DOXYGEN)
-  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/docs/doxygen/DoxyfileAPI.in ${CMAKE_CURRENT_BINARY_DIR}/doc/Doxyfile @ONLY)
-  add_custom_target(docAPI ALL
-    ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/doc/Doxyfile 
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    COMMENT "Generating LMS API documentation with Doxygen" VERBATIM
-    )
-endif()
+#find_package(Doxygen QUIET)
+#include(FeatureSummary)
+#include(CMakeDependentOption)
+#cmake_dependent_option(ENABLE_API_DOXYGEN "Enable LMS API Doxygen documentation" OFF "DOXYGEN_FOUND" OFF)
+#add_feature_info(LimeSuiteDocAPI ENABLE_API_DOXYGEN "LMS API Doxygen documentation")
+#if (ENABLE_API_DOXYGEN)
+#  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/docs/doxygen/DoxyfileAPI.in ${CMAKE_CURRENT_BINARY_DIR}/doc/Doxyfile @ONLY)
+#  add_custom_target(docAPI ALL
+#    ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/doc/Doxyfile
+#    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+#    COMMENT "Generating LMS API documentation with Doxygen" VERBATIM
+#    )
+#endif()
 
-if(DOXYGEN_FOUND)
-  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/docs/doxygen/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
-  add_custom_target(doc
-    ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile 
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    COMMENT "Generating documentation with Doxygen" VERBATIM
-    )
-endif()
+#if(DOXYGEN_FOUND)
+#  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/docs/doxygen/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
+#  add_custom_target(doc
+#    ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
+#    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+#    COMMENT "Generating documentation with Doxygen" VERBATIM
+#    )
+#endif()
 
 ########################################################################
 # CMake Project config files
@@ -272,12 +272,12 @@ endif (ENABLE_HEADERS AND ENABLE_LIBRARY)
 ########################################################################
 ## freedesktop environment integration
 ########################################################################
-add_subdirectory(Desktop)
+#add_subdirectory(Desktop)
 
 ########################################################################
 ## Octave plugin integration
 ########################################################################
-add_subdirectory(octave)
+#add_subdirectory(octave)
 
 #########################################################################
 # summary
