@@ -165,21 +165,37 @@ int ConnectionFT601::Open(const std::string &serial, int vid, int pid)
 #else
 
 #if defined(__ANDROID__)
-    std::string devicePath = serial;
     int fd = vid;
 
-    if (fd < 0 || devicePath.empty())
+    if (fd < 0)
         return ReportError(EINVAL, "Missing Android USB parameters");
 
-    libusb_device *device =
-            libusb_get_device2(ctx, devicePath.c_str());
+//    libusb_device *device =
+//            libusb_get_device2(ctx, serial.c_str());
+//
+//    if (!device)
+//        return ReportError(ENODEV, "libusb_get_device2 failed");
+//
+//    int result = libusb_open2(device, &dev_handle, fd);
+//    if (result != 0 || !dev_handle)
+//        return ReportError(ENODEV, "libusb_open2 failed");
 
-    if (!device)
-        return ReportError(ENODEV, "libusb_get_device2 failed");
+//// CODE BELOW IF USE LIB-USB > 1.25. So far doesn't work on LIME Mini 2.0 devices
+    libusb_set_option(ctx, LIBUSB_OPTION_NO_DEVICE_DISCOVERY, NULL);
+    int result;
+    result = libusb_init(&ctx);
 
-    int result = libusb_open2(device, &dev_handle, fd);
+    if(result < 0){
+        return ReportError(ENODEV, "libusb_init failed");
+    }
+
+    /* 🔥 Android magic here */
+    result = libusb_wrap_sys_device(ctx,
+                               (intptr_t)fd,
+                               &dev_handle);
+
     if (result != 0 || !dev_handle)
-        return ReportError(ENODEV, "libusb_open2 failed");
+        return ReportError(ENODEV, "libusb_wrap_sys_device failed");
 
     isConnected = true;
 #else

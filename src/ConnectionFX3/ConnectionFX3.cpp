@@ -194,6 +194,29 @@ int ConnectionFX3::Open(const std::string &vidpid, const std::string &serial, co
             break;
         }
 #else
+
+#if defined(__ANDROID__)
+    const auto splitPos = vidpid.find(":");
+    const auto fd = std::stoi(vidpid.substr(0, splitPos), nullptr, 10);
+
+    if (fd < 0)
+        return ReportError(EINVAL, "Missing Android USB parameters");
+
+    libusb_set_option(ctx, LIBUSB_OPTION_NO_DEVICE_DISCOVERY, NULL);
+    int result;
+    result = libusb_init(&ctx);
+    if(result < 0){
+        return ReportError(ENODEV, "libusb_init failed");
+    }
+
+    /* 🔥 Android magic here */
+    result = libusb_wrap_sys_device(ctx,
+                                    (intptr_t)fd,
+                                    &dev_handle);
+
+    if (result != 0 || !dev_handle)
+        return ReportError(ENODEV, "libusb_wrap_sys_device failed");
+#else
     const auto splitPos = vidpid.find(":");
     const auto vid = std::stoi(vidpid.substr(0, splitPos), nullptr, 16);
     const auto pid = std::stoi(vidpid.substr(splitPos+1), nullptr, 16);
@@ -236,6 +259,7 @@ int ConnectionFX3::Open(const std::string &vidpid, const std::string &serial, co
 
     if(dev_handle == nullptr)
         return ReportError(-1, "libusb_open failed");
+#endif
     if(libusb_kernel_driver_active(dev_handle, 0) == 1)   //find out if kernel driver is attached
     {
         lime::info("Kernel Driver Active");

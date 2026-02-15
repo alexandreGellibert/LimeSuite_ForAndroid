@@ -34,6 +34,11 @@ ConnectionFX3Entry::ConnectionFX3Entry(const char* connectionName):
     ConnectionRegistryEntry(connectionName)
 {
 #ifdef __unix__
+    /**
+     * Initializing libusb & USB context (ctx) in both ConnectionFX3 and ConnectionFTDI create bug in libusb release >1.24
+     * Indeed events are handled by one context and expected by the other
+     * TODO Refactor libusb_init in ConnectionFX3 and ConnectionFTDI
+     */
     int r = libusb_init(&ctx); //initialize the library for the session we just declared
     if(r < 0)
         lime::error("Init Error %i", r); //there was an error
@@ -52,6 +57,10 @@ ConnectionFX3Entry::ConnectionFX3Entry(void):
     ConnectionRegistryEntry("FX3")
 {
 #ifdef __unix__
+#ifdef __ANDROID__
+    return;
+  libusb_set_option(NULL, LIBUSB_OPTION_NO_DEVICE_DISCOVERY, NULL);
+#endif
     int r = libusb_init(&ctx); //initialize the library for the session we just declared
     if(r < 0)
         lime::error("Init Error %i", r); //there was an error
@@ -78,9 +87,6 @@ ConnectionFX3Entry::~ConnectionFX3Entry(void)
 std::vector<ConnectionHandle> ConnectionFX3Entry::enumerate(const ConnectionHandle &hint)
 {
     std::vector<ConnectionHandle> handles;
-#if defined(__ANDROID__)
-    return handles;
-#endif
 
 #ifndef __unix__
 	CCyUSBDevice device;
@@ -187,5 +193,9 @@ std::vector<ConnectionHandle> ConnectionFX3Entry::enumerate(const ConnectionHand
 
 IConnection *ConnectionFX3Entry::make(const ConnectionHandle &handle)
 {
+#if defined(__ANDROID__)
+    return new ConnectionFX3(ctx, std::to_string(handle.androidFd) + ":" + std::to_string(handle.androidFd) , handle.androidUSBPath, handle.index);
+#elif
     return new ConnectionFX3(ctx, handle.addr, handle.serial, handle.index);
+#endif
 }

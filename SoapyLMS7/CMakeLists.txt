@@ -41,20 +41,9 @@ add_library(SoapyLMS7 MODULE
         	Streaming.cpp
         )
 
-include_directories(
-		${CMAKE_SOURCE_DIR}/SoapySDR/include
-)
-
 target_link_libraries(SoapyLMS7 PRIVATE
 	LimeSuite
-		SoapySDR
-		log
-		android
+	SoapySDR
+	log
+	android
 )
-
-set_target_properties(SoapyLMS7 PROPERTIES
-		PREFIX "lib"
-		SUFFIX ".so"
-		LIBRARY_OUTPUT_DIRECTORY ${ANDROID_JNI_LIBS_DIR}
-)
-
