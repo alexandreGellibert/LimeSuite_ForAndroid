@@ -10,12 +10,6 @@ if(WIN32)
 elseif(ANDROID)
     # Android: libusb is built as a subproject
     set(USB_FOUND TRUE)
-
-    set(USB_INCLUDE_DIRS
-            ${CMAKE_SOURCE_DIR}/libusb/libusb
-            ${CMAKE_SOURCE_DIR}/libusb/android
-    )
-
     # Name of the target created by libusb's CMakeLists.txt
     set(USB_LIBRARIES libusb)
 elseif(UNIX)

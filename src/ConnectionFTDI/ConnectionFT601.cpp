@@ -165,23 +165,26 @@ int ConnectionFT601::Open(const std::string &serial, int vid, int pid)
 #else
 
 #if defined(__ANDROID__)
-    std::string devicePath = serial;
     int fd = vid;
 
-    if (fd < 0 || devicePath.empty())
+    if (fd < 0)
         return ReportError(EINVAL, "Missing Android USB parameters");
 
-    libusb_device *device =
-            libusb_get_device2(ctx, devicePath.c_str());
+    libusb_set_option(ctx, LIBUSB_OPTION_NO_DEVICE_DISCOVERY, NULL);
+    int result;
+    result = libusb_init(&ctx);
 
-    if (!device)
-        return ReportError(ENODEV, "libusb_get_device2 failed");
+    if(result < 0){
+        return ReportError(ENODEV, "libusb_init failed");
+    }
 
-    int result = libusb_open2(device, &dev_handle, fd);
+    /* 🔥 Android magic here */
+    result = libusb_wrap_sys_device(ctx,
+                               (intptr_t)fd,
+                               &dev_handle);
+
     if (result != 0 || !dev_handle)
-        return ReportError(ENODEV, "libusb_open2 failed");
-
-    isConnected = true;
+        return ReportError(ENODEV, "libusb_wrap_sys_device failed");
 #else
     libusb_device **devs; //pointer to pointer of device, used to retrieve a list of devices
 
