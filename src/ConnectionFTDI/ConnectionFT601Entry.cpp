@@ -38,6 +38,7 @@ ConnectionFT601Entry::ConnectionFT601Entry(void):
     /**
      * Initializing libusb & USB context (ctx) in both ConnectionFX3 and ConnectionFTDI create bug in libusb release >1.24
      * Indeed events are handled by one context and expected by the other
+     * Also do not set LIBUSB_OPTION_NO_DEVICE_DISCOVERY before having the context, it will create issues (stream silently failing, hard to trace back)
      * TODO Refactor libusb_init in ConnectionFX3 and ConnectionFTDI
      */
     int r = libusb_init(&ctx); //initialize the library for the session we just declared
