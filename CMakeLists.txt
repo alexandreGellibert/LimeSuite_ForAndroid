@@ -7,7 +7,7 @@ project("LimeSuite")
 
 set(CMAKE_BUILD_TYPE Debug)
 option(BUILD_SHARED_LIBS "Build the shared library" ON)
-option(ENABLE_NEW_GAIN_BEHAVIOUR "Enable new gain functionality" OFF)
+option(ENABLE_NEW_GAIN_BEHAVIOUR "Enable new gain functionality" ON)
 
 #include modules for finding CyAPI
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/")
