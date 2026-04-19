@@ -9,7 +9,7 @@
 #include "threadHelper.h"
 using namespace lime;
 
-#ifdef __unix__
+#if defined(__unix__) && !defined(__ANDROID__)
 void ConnectionFT601Entry::handle_libusb_events()
 {
     struct timeval tv;
@@ -18,10 +18,11 @@ void ConnectionFT601Entry::handle_libusb_events()
     while(mProcessUSBEvents.load() == true)
     {
         int r = libusb_handle_events_timeout_completed(ctx, &tv, NULL);
-        if(r != 0) lime::error("error libusb_handle_events %s", libusb_strerror(libusb_error(r)));
+        if(r != 0)
+            lime::error("error libusb_handle_events %s", libusb_strerror(libusb_error(r)));
     }
 }
-#endif // __UNIX__
+#endif // __unix__ && !__ANDROID__
 
 //! make a static-initialized entry in the registry
 void __loadConnectionFT601Entry(void) //TODO fixme replace with LoadLibrary/dlopen
@@ -32,15 +33,7 @@ void __loadConnectionFT601Entry(void) //TODO fixme replace with LoadLibrary/dlop
 ConnectionFT601Entry::ConnectionFT601Entry(void):
     ConnectionRegistryEntry("FT601")
 {
-#ifndef __unix__
-    //m_pDriver = new CDriverInterface();
-#else
-    /**
-     * Initializing libusb & USB context (ctx) in both ConnectionFX3 and ConnectionFTDI create bug in libusb release >1.24
-     * Indeed events are handled by one context and expected by the other
-     * Also do not set LIBUSB_OPTION_NO_DEVICE_DISCOVERY before having the context, it will create issues (stream silently failing, hard to trace back)
-     * TODO Refactor libusb_init in ConnectionFX3 and ConnectionFTDI
-     */
+#if defined(__unix__) && !defined(__ANDROID__)
     int r = libusb_init(&ctx); //initialize the library for the session we just declared
     if(r < 0)
         lime::error("Init Error %i", r); //there was an error
@@ -57,9 +50,7 @@ ConnectionFT601Entry::ConnectionFT601Entry(void):
 
 ConnectionFT601Entry::~ConnectionFT601Entry(void)
 {
-#ifndef __unix__
-    //delete m_pDriver;
-#else
+#if defined(__unix__) && !defined(__ANDROID__)
     mProcessUSBEvents.store(false);
     mUSBProcessingThread.join();
     libusb_exit(ctx);
@@ -100,7 +91,7 @@ std::vector<ConnectionHandle> ConnectionFT601Entry::enumerate(const ConnectionHa
             }
         }
     }
-#else
+#elif !defined(__ANDROID__)
     libusb_device **devs; //pointer to pointer of device, used to retrieve a list of devices
     int usbDeviceCount = libusb_get_device_list(ctx, &devs);
 
@@ -173,6 +164,8 @@ IConnection *ConnectionFT601Entry::make(const ConnectionHandle &handle)
 {
 #ifndef __unix__
     return new ConnectionFT601(mFTHandle, handle);
+#elif defined(__ANDROID__)
+    return new ConnectionFT601(nullptr, handle);
 #else
     return new ConnectionFT601(ctx, handle);
 #endif

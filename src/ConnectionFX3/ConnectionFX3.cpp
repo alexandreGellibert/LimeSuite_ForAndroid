@@ -10,6 +10,7 @@
 #include "FPGA_common.h"
 #include "LMS7002M.h"
 #include "Logger.h"
+#include "threadHelper.h"
 #include <ciso646>
 #include <fstream>
 #include <thread>
@@ -26,6 +27,21 @@ using namespace std;
 #define CTR_R_INDEX 0x0000
 
 using namespace lime;
+
+#if defined(__unix__) && defined(__ANDROID__)
+void ConnectionFX3::handle_libusb_events()
+{
+    struct timeval tv;
+    tv.tv_sec = 0;
+    tv.tv_usec = 250000;
+    while (mProcessUSBEvents.load())
+    {
+        int r = libusb_handle_events_timeout_completed(ctx, &tv, NULL);
+        if (r != 0)
+            lime::error("error libusb_handle_events %s", libusb_strerror(libusb_error(r)));
+    }
+}
+#endif
 
 const uint8_t ConnectionFX3::ctrlBulkOutAddr = 0x0F;
 const uint8_t ConnectionFX3::ctrlBulkInAddr = 0x8F;
@@ -220,6 +236,10 @@ int ConnectionFX3::Open(const std::string &vidpid, const std::string &serial, co
 
     if (result != 0 || !dev_handle)
         return ReportError(ENODEV, "libusb_wrap_sys_device failed");
+
+    mProcessUSBEvents.store(true);
+    mUSBProcessingThread = std::thread(&ConnectionFX3::handle_libusb_events, this);
+    SetOSThreadPriority(ThreadPriority::NORMAL, ThreadPolicy::REALTIME, &mUSBProcessingThread);
 #else
     const auto splitPos = vidpid.find(":");
     const auto vid = std::stoi(vidpid.substr(0, splitPos), nullptr, 16);
@@ -354,12 +374,27 @@ void ConnectionFX3::Close()
         OutCtrlEndPt3 = nullptr;
     }
     #else
+#if defined(__ANDROID__)
+    if (mProcessUSBEvents.load())
+    {
+        mProcessUSBEvents.store(false);
+        if (mUSBProcessingThread.joinable())
+            mUSBProcessingThread.join();
+    }
+#endif
     if(dev_handle != 0)
     {
         libusb_release_interface(dev_handle, 0);
         libusb_close(dev_handle);
         dev_handle = 0;
     }
+#if defined(__ANDROID__)
+    if (ctx != nullptr)
+    {
+        libusb_exit(ctx);
+        ctx = nullptr;
+    }
+#endif
     #endif
     isConnected = false;
 }

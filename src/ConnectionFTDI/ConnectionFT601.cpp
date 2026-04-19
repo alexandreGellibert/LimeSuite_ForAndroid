@@ -14,6 +14,7 @@
 #include <FPGA_common.h>
 #include <ciso646>
 #include "Logger.h"
+#include "threadHelper.h"
 
 using namespace std;
 using namespace lime;
@@ -22,6 +23,22 @@ const int ConnectionFT601::streamWrEp = 0x03;
 const int ConnectionFT601::streamRdEp = 0x83;
 const int ConnectionFT601::ctrlWrEp = 0x02;
 const int ConnectionFT601::ctrlRdEp = 0x82;
+
+
+#if defined(__unix__) && defined(__ANDROID__)
+void ConnectionFT601::handle_libusb_events()
+{
+    struct timeval tv;
+    tv.tv_sec = 0;
+    tv.tv_usec = 250000;
+    while (mProcessUSBEvents.load())
+    {
+        int r = libusb_handle_events_timeout_completed(ctx, &tv, NULL);
+        if (r != 0)
+            lime::error("error libusb_handle_events %s", libusb_strerror(libusb_error(r)));
+    }
+}
+#endif
 
 ConnectionFT601::ConnectionFT601(void *arg)
 {
@@ -188,6 +205,10 @@ int ConnectionFT601::Open(const std::string &serial, int vid, int pid)
 
     if (result != 0 || !dev_handle)
         return ReportError(ENODEV, "libusb_wrap_sys_device failed");
+
+    mProcessUSBEvents.store(true);
+    mUSBProcessingThread = std::thread(&ConnectionFT601::handle_libusb_events, this);
+    SetOSThreadPriority(ThreadPriority::NORMAL, ThreadPolicy::REALTIME, &mUSBProcessingThread);
 #else
     libusb_device **devs; //pointer to pointer of device, used to retrieve a list of devices
 
@@ -260,6 +281,14 @@ void ConnectionFT601::Close()
 #ifndef __unix__
     FT_Close(mFTHandle);
 #else
+#if defined(__ANDROID__)
+    if (mProcessUSBEvents.load())
+    {
+        mProcessUSBEvents.store(false);
+        if (mUSBProcessingThread.joinable())
+            mUSBProcessingThread.join();
+    }
+#endif
     if(dev_handle != 0)
     {
         FT_FlushPipe(streamRdEp);
@@ -268,6 +297,13 @@ void ConnectionFT601::Close()
         libusb_close(dev_handle);
         dev_handle = 0;
     }
+#if defined(__ANDROID__)
+    if (ctx != nullptr)
+    {
+        libusb_exit(ctx);
+        ctx = nullptr;
+    }
+#endif
 #endif
     isConnected = false;
 }

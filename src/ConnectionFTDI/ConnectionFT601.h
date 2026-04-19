@@ -122,6 +122,11 @@ protected:
     uint32_t mUsbCounter;
     libusb_device_handle *dev_handle; //a device handle
     libusb_context *ctx; //a libusb session
+#if defined(__ANDROID__)
+    std::thread mUSBProcessingThread;
+    std::atomic<bool> mProcessUSBEvents{false};
+    void handle_libusb_events();
+#endif
 #endif
     std::mutex mExtraUsbMutex;
     uint64_t mSerial;
@@ -137,7 +142,7 @@ public:
 private:
 #ifndef __unix__
     FT_HANDLE* mFTHandle;
-#else
+#elif !defined(__ANDROID__)
     libusb_context *ctx; //a libusb session
     std::thread mUSBProcessingThread;
     void handle_libusb_events();

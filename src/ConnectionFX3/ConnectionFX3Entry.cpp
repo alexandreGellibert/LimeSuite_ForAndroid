@@ -10,7 +10,7 @@
 
 using namespace lime;
 
-#ifdef __unix__
+#if defined(__unix__) && !defined(__ANDROID__)
 void ConnectionFX3Entry::handle_libusb_events()
 {
     struct timeval tv;
@@ -22,7 +22,7 @@ void ConnectionFX3Entry::handle_libusb_events()
         if(r != 0) lime::error("error libusb_handle_events %s", libusb_strerror(libusb_error(r)));
     }
 }
-#endif // __UNIX__
+#endif // __unix__ && !__ANDROID__
 
 //! make a static-initialized entry in the registry
 void __loadConnectionFX3Entry(void) //TODO fixme replace with LoadLibrary/dlopen
@@ -33,13 +33,7 @@ static ConnectionFX3Entry FX3Entry;
 ConnectionFX3Entry::ConnectionFX3Entry(const char* connectionName):
     ConnectionRegistryEntry(connectionName)
 {
-#ifdef __unix__
-    /**
-     * Initializing libusb & USB context (ctx) in both ConnectionFX3 and ConnectionFTDI create bug in libusb release >1.24
-     * Indeed events are handled by one context and expected by the other
-     * Also do not set LIBUSB_OPTION_NO_DEVICE_DISCOVERY before having the context, it will create issues (stream silently failing, hard to trace back)
-     * TODO Refactor libusb_init in ConnectionFX3 and ConnectionFTDI
-     */
+#if defined(__unix__) && !defined(__ANDROID__)
     int r = libusb_init(&ctx); //initialize the library for the session we just declared
     if(r < 0)
         lime::error("Init Error %i", r); //there was an error
@@ -57,7 +51,7 @@ ConnectionFX3Entry::ConnectionFX3Entry(const char* connectionName):
 ConnectionFX3Entry::ConnectionFX3Entry(void):
     ConnectionRegistryEntry("FX3")
 {
-#ifdef __unix__
+#if defined(__unix__) && !defined(__ANDROID__)
     int r = libusb_init(&ctx); //initialize the library for the session we just declared
     if(r < 0)
         lime::error("Init Error %i", r); //there was an error
@@ -74,7 +68,7 @@ ConnectionFX3Entry::ConnectionFX3Entry(void):
 
 ConnectionFX3Entry::~ConnectionFX3Entry(void)
 {
-#ifdef __unix__
+#if defined(__unix__) && !defined(__ANDROID__)
     mProcessUSBEvents.store(false);
     mUSBProcessingThread.join();
     libusb_exit(ctx);
@@ -114,7 +108,7 @@ std::vector<ConnectionHandle> ConnectionFX3Entry::enumerate(const ConnectionHand
             device.Close();
         }
     }
-#else
+#elif !defined(__ANDROID__)
     libusb_device **devs; //pointer to pointer of device, used to retrieve a list of devices
     int usbDeviceCount = libusb_get_device_list(ctx, &devs);
 
@@ -191,8 +185,8 @@ std::vector<ConnectionHandle> ConnectionFX3Entry::enumerate(const ConnectionHand
 IConnection *ConnectionFX3Entry::make(const ConnectionHandle &handle)
 {
 #if defined(__ANDROID__)
-    return new ConnectionFX3(ctx, std::to_string(handle.androidFd) + ":" + std::to_string(handle.androidFd) , handle.androidUSBPath, handle.index);
-#elif
+    return new ConnectionFX3(nullptr, std::to_string(handle.androidFd) + ":" + std::to_string(handle.androidFd), handle.androidUSBPath, handle.index);
+#else
     return new ConnectionFX3(ctx, handle.addr, handle.serial, handle.index);
 #endif
 }

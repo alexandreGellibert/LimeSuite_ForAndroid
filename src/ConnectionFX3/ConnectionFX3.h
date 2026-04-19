@@ -143,6 +143,11 @@ protected:
     int read_firmware_image(unsigned char *buf, int len);
     int fx3_usbboot_download(unsigned char *buf, int len);
     int ram_write(unsigned char *buf, unsigned int ramAddress, int len);
+#if defined(__ANDROID__)
+    std::thread mUSBProcessingThread;
+    std::atomic<bool> mProcessUSBEvents{false};
+    void handle_libusb_events();
+#endif
 #endif
     static const uint8_t ctrlBulkOutAddr;
     static const uint8_t ctrlBulkInAddr;
@@ -165,7 +170,7 @@ public:
 protected:
 #ifndef __unix__
     void *ctx; //not used, just for mirroring unix
-#else
+#elif !defined(__ANDROID__)
     libusb_context* ctx; //a libusb session
     std::thread mUSBProcessingThread;
     void handle_libusb_events();
