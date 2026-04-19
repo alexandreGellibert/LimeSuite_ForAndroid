@@ -24,8 +24,7 @@ void ConnectionFT601Entry::handle_libusb_events()
 }
 #endif // __unix__ && !__ANDROID__
 
-//! make a static-initialized entry in the registry
-void __loadConnectionFT601Entry(void) //TODO fixme replace with LoadLibrary/dlopen
+void __loadConnectionFT601Entry(void)
 {
     static ConnectionFT601Entry FTDIEntry;
 }
